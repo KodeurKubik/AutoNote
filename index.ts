@@ -35,7 +35,7 @@ class User {
     username: string,
     password: string,
     notes: string,
-    moyennes: string
+    moyennes: string,
   ) {
     this.id = id;
     this.notify = notify;
@@ -48,10 +48,10 @@ class User {
 
 const db = new Database(
   `db${process.argv.includes("--dev") ? "-dev" : ""}.sqlite`,
-  { create: true, readwrite: true }
+  { create: true, readwrite: true },
 );
 db.query(
-  "CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, notify BOOL, username TEXT, password TEXT, notes TEXT, moyennes TEXT)"
+  "CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, notify BOOL, username TEXT, password TEXT, notes TEXT, moyennes TEXT)",
 ).run();
 
 const USERS: { [id: string]: User } = {};
@@ -88,11 +88,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       const typ = interaction.options.getFocused().toLowerCase();
       const filtered = Object.keys(u.notes).filter((c) =>
-        c.toLowerCase().includes(typ)
+        c.toLowerCase().includes(typ),
       );
 
       await interaction.respond(
-        filtered.map((choice) => ({ name: choice, value: choice }))
+        filtered.map((choice) => ({ name: choice, value: choice })),
       );
     }
   }
@@ -102,14 +102,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
       if (USERS[interaction.user.id]) USERS[interaction.user.id].notify = false;
       db.query("UPDATE users SET notify = ?1 WHERE id = ?2").run(
         false,
-        interaction.user.id
+        interaction.user.id,
       );
 
       await interaction.reply({
         content:
           config.translation.notification.disabled[
             Math.floor(
-              Math.random() * config.translation.notification.disabled.length
+              Math.random() * config.translation.notification.disabled.length,
             )
           ],
         components: [
@@ -118,7 +118,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
               .setCustomId("notif-on")
               .setEmoji(config.translation.notification.disabled_button.emoji)
               .setLabel(config.translation.notification.disabled_button.label)
-              .setStyle(ButtonStyle.Primary)
+              .setStyle(ButtonStyle.Primary),
           ),
         ],
       });
@@ -128,14 +128,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
       if (USERS[interaction.user.id]) USERS[interaction.user.id].notify = false;
       db.query("UPDATE users SET notify = ?1 WHERE id = ?2").run(
         true,
-        interaction.user.id
+        interaction.user.id,
       );
 
       await interaction.reply({
         content:
           config.translation.notification.enabled[
             Math.floor(
-              Math.random() * config.translation.notification.enabled.length
+              Math.random() * config.translation.notification.enabled.length,
             )
           ],
         components: [
@@ -144,7 +144,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
               .setCustomId("notif-off")
               .setEmoji(config.translation.notification.enabled_button.emoji)
               .setLabel(config.translation.notification.enabled_button.label)
-              .setStyle(ButtonStyle.Primary)
+              .setStyle(ButtonStyle.Primary),
           ),
         ],
       });
@@ -168,7 +168,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         USERS[interaction.user.id].password = password;
 
         db.query(
-          "UPDATE users SET username = ?1, password = ?2 WHERE id = ?3"
+          "UPDATE users SET username = ?1, password = ?2 WHERE id = ?3",
         ).run(username, password, interaction.user.id);
       } else {
         USERS[interaction.user.id] = new User(
@@ -177,12 +177,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
           username,
           password,
           "{}",
-          "{}"
+          "{}",
         );
 
         db.query(
-          "INSERT INTO users (id, notify, username, password) VALUES (?1, ?2, ?3, ?4)"
-        ).run(interaction.user.id, true, username, password);
+          "INSERT INTO users (id, notify, username, password, notes, moyennes) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        ).run(interaction.user.id, true, username, password, "{}", "{}");
       }
       return await interaction.editReply({
         content: config.translation.logged_in,
@@ -215,14 +215,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
               .setTitle(
                 `${config.translation.grades} ${u.username
                   .slice(0, 3)
-                  .toUpperCase()}...`
+                  .toUpperCase()}...`,
               )
               .setColor("#393A41")
               .setDescription(
                 `${config.translation.grades.average} **${(
                   Object.values(u.moyennes[config.TRIMESTRE]!).reduce(
                     (a, b) => a + b,
-                    0
+                    0,
                   ) / Object.keys(u.moyennes[config.TRIMESTRE]!).length
                 ).toFixed(2)}**\n——————————\n${
                   config.translation.grades.per_subject
@@ -230,15 +230,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
                   .sort(
                     (a, b) =>
                       u.moyennes[config.TRIMESTRE]![b] -
-                      u.moyennes[config.TRIMESTRE]![a]
+                      u.moyennes[config.TRIMESTRE]![a],
                   )
                   .map(
                     (m) =>
                       `**${u.moyennes[config.TRIMESTRE]![m].toFixed(
-                        2
-                      )}** : ${m}`
+                        2,
+                      )}** : ${m}`,
                   )
-                  .join("\n")}`
+                  .join("\n")}`,
               )
               .setFooter({ text: `${config.TRIMESTRE}` }),
           ],
@@ -284,7 +284,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const oldM = makeMoyenne(found).toFixed(2);
       const newM = makeMoyenne(found.concat(`${note}/${sur}`));
       const moyennes = Object.keys(u.moyennes[config.TRIMESTRE]).map((k) =>
-        k == matiere ? newM : u.moyennes[config.TRIMESTRE][k]!
+        k == matiere ? newM : u.moyennes[config.TRIMESTRE][k]!,
       );
 
       await interaction.editReply({
@@ -293,7 +293,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             .setTitle(
               `**${u.username.slice(0, 3).toUpperCase()}...**: ${
                 config.translation.whatif.what_if
-              }`
+              }`,
             )
             .setColor("#393A41")
             .setDescription(
@@ -305,20 +305,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
                   : ""
               }\n> ${config.translation.whatif.add_of(
                 note,
-                sur
+                sur,
               )} [${oldM}] -> **[${newM.toFixed(2)}]** !\n${
                 config.translation.whatif.new_average
               } [${
                 (
                   Object.values(u.moyennes[config.TRIMESTRE]).reduce(
                     (a, b) => a + b,
-                    0
+                    0,
                   ) / Object.keys(u.moyennes[config.TRIMESTRE]).length
                 )?.toFixed(2) || "/"
               }] -> **[${(
                 Object.values(moyennes).reduce((a, b) => a + b, 0) /
                 Object.keys(moyennes).length
-              ).toFixed(2)}]**`
+              ).toFixed(2)}]**`,
             )
             .setFooter({ text: `${config.TRIMESTRE}` }),
         ],
@@ -342,7 +342,7 @@ client.on(Events.ClientReady, async (readyClient) => {
           .setDescription(config.translation.commands.login.username)
           .setRequired(true)
           .setMinLength(1)
-          .setMaxLength(20)
+          .setMaxLength(20),
       )
       .addStringOption((opt) =>
         opt
@@ -350,7 +350,7 @@ client.on(Events.ClientReady, async (readyClient) => {
           .setDescription(config.translation.commands.login.password)
           .setRequired(true)
           .setMinLength(1)
-          .setMaxLength(20)
+          .setMaxLength(20),
       ),
     new SlashCommandBuilder()
       .setName("pronote")
@@ -368,14 +368,14 @@ client.on(Events.ClientReady, async (readyClient) => {
           .setDescription(config.translation.commands.whatif.i_got)
           .setRequired(true)
           .setMinLength(1)
-          .setMaxLength(8)
+          .setMaxLength(8),
       )
       .addStringOption((opt) =>
         opt
           .setName("in")
           .setDescription(config.translation.commands.whatif.in)
           .setRequired(true)
-          .setAutocomplete(true)
+          .setAutocomplete(true),
       ),
   ]);
 
@@ -404,7 +404,7 @@ async function update() {
         Object.values(USERS).map((u) => ({
           username: u.username,
           password: u.password,
-        }))
+        })),
       ),
     ]);
 
@@ -414,12 +414,19 @@ async function update() {
       Object.keys(USERS)
         .filter(
           (u) =>
-            USERS[u].username == r.username && USERS[u].password == r.password
+            USERS[u].username == r.username && USERS[u].password == r.password,
         )
         .forEach(async (u) => {
+          if (!USERS[u].notes) USERS[u].notes = {};
+          if (!USERS[u].moyennes) USERS[u].moyennes = {};
+
           if (
             USERS[u] &&
             USERS[u].notify &&
+            USERS[u].notes &&
+            USERS[u].moyennes &&
+            USERS[u].notes[config.TRIMESTRE] &&
+            USERS[u].moyennes[config.TRIMESTRE] &&
             Object.keys(USERS[u].notes).length != 0 &&
             Object.keys(USERS[u].moyennes).length != 0
           ) {
@@ -437,14 +444,19 @@ async function update() {
                   note: note.note,
                 }));
 
-                if (!before || !before[n]) return normalized;
+                if (
+                  !before ||
+                  !before[config.TRIMESTRE] ||
+                  !before[config.TRIMESTRE][n]
+                )
+                  return [];
 
                 return normalized.filter(
                   (nn) =>
                     !before[config.TRIMESTRE][n].some(
                       (oldNote) =>
-                        oldNote.date === nn.date && oldNote.note === nn.note
-                    )
+                        oldNote.date === nn.date && oldNote.note === nn.note,
+                    ),
                 );
               })
               .filter((l) => l.length > 0)
@@ -459,7 +471,7 @@ async function update() {
                     .setTitle(
                       `**${USERS[u].username.slice(0, 3).toUpperCase()}...**: ${
                         config.translation.new_grades.new_grades
-                      }`
+                      }`,
                     )
                     .setColor("#393A41")
                     .setDescription(
@@ -471,21 +483,21 @@ async function update() {
                               `${config.translation.new_grades.you_got(
                                 c.matiere,
                                 c.date,
-                                c.note
+                                c.note,
                               )}\n> ${
                                 config.translation.new_grades.new_average
                               } [${
                                 USERS[u].moyennes[config.TRIMESTRE]![
                                   c.matiere
                                 ]?.toFixed(2) || "/"
-                              }] -> **[${r.moyennes[c.matiere].toFixed(2)}]**`
+                              }] -> **[${r.moyennes[c.matiere].toFixed(2)}]**`,
                           )
                           .join("\n\n") +
                         "\n\n" +
                         `${config.translation.new_grades.new_global_average} [${
                           (
                             Object.values(
-                              USERS[u].moyennes[config.TRIMESTRE]!
+                              USERS[u].moyennes[config.TRIMESTRE]!,
                             ).reduce((a, b) => a + b, 0) /
                             Object.keys(USERS[u].moyennes[config.TRIMESTRE]!)
                               .length
@@ -493,9 +505,9 @@ async function update() {
                         }] -> **[${(
                           Object.values(r.moyennes!).reduce(
                             (a, b) => a + b,
-                            0
+                            0,
                           ) / Object.keys(r.moyennes!).length
-                        ).toFixed(2)}]**`
+                        ).toFixed(2)}]**`,
                     )
                     .setFooter({ text: `${config.TRIMESTRE}` }),
                 ],
@@ -504,12 +516,12 @@ async function update() {
                     new ButtonBuilder()
                       .setCustomId("notif-off")
                       .setEmoji(
-                        config.translation.notification.enabled_button.emoji
+                        config.translation.notification.enabled_button.emoji,
                       )
                       .setLabel(
-                        config.translation.notification.enabled_button.label
+                        config.translation.notification.enabled_button.label,
                       )
-                      .setStyle(ButtonStyle.Primary)
+                      .setStyle(ButtonStyle.Primary),
                   ),
                 ],
               });
@@ -519,11 +531,11 @@ async function update() {
           USERS[u].notes[config.TRIMESTRE] = r.notes;
           USERS[u].moyennes[config.TRIMESTRE] = r.moyennes;
           db.query(
-            "UPDATE users SET notes = ?1, moyennes = ?2 WHERE id = ?3"
+            "UPDATE users SET notes = ?1, moyennes = ?2 WHERE id = ?3",
           ).run(
             JSON.stringify(USERS[u].notes),
             JSON.stringify(USERS[u].moyennes),
-            u
+            u,
           );
         });
     });

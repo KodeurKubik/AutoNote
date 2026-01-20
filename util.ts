@@ -7,7 +7,7 @@ export type Notes = {
 };
 
 export async function scrape(
-  accounts: { username: string; password: string }[]
+  accounts: { username: string; password: string }[],
 ): Promise<
   { username: string; password: string; moyennes: Moyennes; notes: Notes }[]
 > {
@@ -41,7 +41,7 @@ export async function scrape(
         .click({ timeout: 2000 });
 
       // select trimestre
-      await page
+      /*await page
         .getByLabel("Sélectionnez une période")
         .click({ timeout: 10000 });
 
@@ -50,7 +50,7 @@ export async function scrape(
           '[id="GInterface.Instances[2].Instances[0]_ContenuScroll"] > *'
         )
         .getByText(config.TRIMESTRE, { exact: true })
-        .click({ timeout: 10000 });
+        .click({ timeout: 10000 });*/
 
       // then
       await page.waitForTimeout(1000);
@@ -61,10 +61,10 @@ export async function scrape(
       await page.waitForTimeout(500);
       await page.waitForSelector(
         '[id="GInterface.Instances[2].Instances[1]_grid_0"] > *',
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
       const matieres = page.locator(
-        '[id="GInterface.Instances[2].Instances[1]_grid_0"] > *'
+        '[id="GInterface.Instances[2].Instances[1]_grid_0"] > *',
       );
 
       const MOYENNES: Moyennes = {};
@@ -78,13 +78,19 @@ export async function scrape(
         const text = (await mat.innerText()).trim();
         if (text) {
           if ((await mat.getByLabel("Moyenne élève").count()) == 0) {
-            const split = text.split("\n");
-            const noName = split[1].startsWith("Moyenne groupe");
+            const split = text.split("\n").filter((a) => a);
+            if (split.includes("Abs")) continue;
+
+            const noName = !Number.isNaN(+split[1][0]);
+
+            console.log(noName, split);
+            const noteValue = noName ? split[1] : split[2];
+            if (!noteValue) continue;
 
             NOTES[current].push({
               date: split[0], // always
               nom: noName ? "" : split[1],
-              note: (noName ? split[2] : split[3]).replaceAll(",", "."),
+              note: noteValue.replaceAll(",", "."),
             });
           } else {
             const [matiere, moyenne] = text.split("\n");
